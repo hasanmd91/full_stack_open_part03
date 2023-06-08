@@ -1,11 +1,7 @@
-const express = require('express');
-const phoneBookData = require('./src/Data/index.js');
-const {
-  parseName,
-  parseNumber,
-  generateRandomId,
-} = require('./src/Utils/index.js');
-const morgan = require('morgan');
+import express from 'express';
+import morgan from 'morgan';
+import { phoneBookData } from './src/Data/index.js';
+import { parseName, parseNumber, generateRandomId } from './src/Utils/index.js';
 
 const unknowsEndPoint = (req, res, next) => {
   res.status(404).send({ error: 'unknown end point' });

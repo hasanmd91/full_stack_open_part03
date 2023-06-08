@@ -1,4 +1,4 @@
-const phoneBookData = [
+export const phoneBookData = [
   {
     id: 1,
     name: 'Arto Hellas',
@@ -20,5 +20,3 @@ const phoneBookData = [
     number: '39-23-6423122',
   },
 ];
-
-module.exports = phoneBookData;

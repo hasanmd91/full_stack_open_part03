@@ -1,4 +1,4 @@
-const phoneBookData = require('../Data/index.js');
+import { phoneBookData } from '../Data/index.js';
 
 const isString = (str) => {
   if (typeof str !== 'string') {
@@ -16,28 +16,22 @@ const checkUnique = (name) => {
   return name;
 };
 
-const parseName = (name) => {
+export const parseName = (name) => {
   if (!name || !isString(name) || !checkUnique(name)) {
     throw new Error('name is missing');
   }
   return name;
 };
 
-const parseNumber = (number) => {
+export const parseNumber = (number) => {
   if (!number || !isString(number)) {
     throw new Error('number is missing');
   }
   return number;
 };
 
-function generateRandomId(length) {
+export function generateRandomId(length) {
   let min = Math.pow(10, length);
   let max = Math.pow(10, length + 1) - 1;
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
-
-module.exports = {
-  parseName: parseName,
-  parseNumber: parseNumber,
-  generateRandomId: generateRandomId,
-};
