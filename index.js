@@ -51,6 +51,7 @@ app.use(
     ':method :url :status :response-time ms - :res[content-length] :body - :req[content-length]'
   )
 );
+app.use(express.static('build'));
 
 app.get('/api/persons', (req, res) => {
   res.json(phoneBookData);
