@@ -81,7 +81,7 @@ app.post('/api/persons', (req, res) => {
 
 app.use(unknowsEndPoint);
 
-const port = 3001;
-app.listen(port, () => {
-  console.log(` server running in the port ${port}`);
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => {
+  console.log(` server running in the PORT ${PORT}`);
 });
