@@ -36,4 +36,8 @@ function generateRandomId(length) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-module.exports = { parseName, parseNumber, generateRandomId };
+module.exports = {
+  parseName: parseName,
+  parseNumber: parseNumber,
+  generateRandomId: generateRandomId,
+};
