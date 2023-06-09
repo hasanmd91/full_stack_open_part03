@@ -1,5 +1,9 @@
 import express from 'express';
 import morgan from 'morgan';
+import Contact from './models/contact.js';
+import { configDotenv } from 'dotenv';
+
+configDotenv();
 
 const phoneBookData = [
   {
@@ -75,10 +79,6 @@ app.use(
 );
 app.use(express.static('build'));
 
-app.get('/api/persons', (req, res) => {
-  res.json(phoneBookData);
-});
-
 app.get('/info', (_req, res) => {
   res.send(
     `<p>The phone book has info for ${
@@ -87,18 +87,33 @@ app.get('/info', (_req, res) => {
   );
 });
 
+app.get('/api/persons', (req, res) => {
+  Contact.find({})
+    .then((result) => {
+      if (result) {
+        res.json(result);
+      } else {
+        res.status(404).end();
+      }
+    })
+    .catch((error) => {
+      res.status(500).json(error.message).end();
+    });
+});
+
 app.get('/api/persons/:id', (req, res) => {
-  const id = Number(req.params.id);
-
-  const data = phoneBookData.find((d) => d.id === id);
-
-  if (data) {
-    res.json(data);
-  } else {
-    res
-      .status(404)
-      .send({ error: `${id} is missing or not exist in the phonebook` });
-  }
+  Contact.findById(req.params.id)
+    .then((result) => {
+      if (result) {
+        res.json(result);
+      } else {
+        res.status(404).end();
+      }
+    })
+    .catch((error) => {
+      console.log(error);
+      res.status(500).end();
+    });
 });
 
 app.delete('/api/persons/:id', (req, res) => {
@@ -135,7 +150,7 @@ app.post('/api/persons', (req, res) => {
 
 app.use(unknowsEndPoint);
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT;
 app.listen(PORT, () => {
   console.log(` server running in the PORT ${PORT}`);
 });
