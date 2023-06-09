@@ -5,29 +5,6 @@ import { configDotenv } from 'dotenv';
 
 configDotenv();
 
-const phoneBookData = [
-  {
-    id: 1,
-    name: 'Arto Hellas',
-    number: '040-123456',
-  },
-  {
-    id: 2,
-    name: 'Ada Lovelace',
-    number: '39-44-5323523',
-  },
-  {
-    id: 3,
-    name: 'Dan Abramov',
-    number: '12-43-234345',
-  },
-  {
-    id: 4,
-    name: 'Mary Poppendieck',
-    number: '39-23-6423122',
-  },
-];
-
 const isString = (str) => {
   if (typeof str !== 'string') {
     throw new Error(`typeof ${str} is not valid`);
@@ -35,12 +12,13 @@ const isString = (str) => {
   return str;
 };
 
-const checkUnique = (name) => {
-  const matchedData = phoneBookData.find((data) => data.name === name);
-  console.log(name);
-  if (matchedData) {
-    throw new Error(`provided name ${name} must be unique`);
+const checkUnique = async (name) => {
+  const result = await Contact.find({ name: name });
+  console.log(result);
+  if (result.length > 0) {
+    throw new Error(`Provided name '${name}' must be unique`);
   }
+
   return name;
 };
 
@@ -58,13 +36,7 @@ const parseNumber = (number) => {
   return number;
 };
 
-function generateRandomId(length) {
-  let min = Math.pow(10, length);
-  let max = Math.pow(10, length + 1) - 1;
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-const unknowsEndPoint = (req, res, next) => {
+const unknowsEndPoint = (req, res) => {
   res.status(404).send({ error: 'unknown end point' });
 };
 
@@ -117,34 +89,37 @@ app.get('/api/persons/:id', (req, res) => {
 });
 
 app.delete('/api/persons/:id', (req, res) => {
-  const id = Number(req.params.id);
-  const data = phoneBookData.filter((d) => d.id !== id);
-  if (data) {
-    res.json(data);
-  } else {
-    res
-      .status(404)
-      .send({ error: `${id} is missing or not exist in the phonebook` });
-  }
+  Contact.findByIdAndDelete(req.params.id)
+    .then((result) => {
+      res.json(result);
+    })
+    .catch((error) => {
+      console.log(error);
+      res.status(404).send('contact is missing or not exist in the phonebook`');
+    });
 });
 
-app.post('/api/persons', (req, res) => {
+app.post('/api/persons', async (req, res) => {
   const body = req.body;
-
   if (!body) {
-    return res.status(400).json({ error: 'content is missing ' });
+    return res.status(400).json({ error: 'content is missing' });
   }
-
   try {
-    const data = {
-      id: generateRandomId(phoneBookData.length),
+    const newContact = new Contact({
       name: parseName(body.name),
       number: parseNumber(body.number),
-    };
-    phoneBookData.push(data);
-    res.json(data);
+    });
+
+    newContact
+      .save()
+      .then((result) => {
+        res.json(result).end();
+      })
+      .catch((err) => {
+        res.status(404).json({ error: err.message }).end();
+      });
   } catch (err) {
-    res.status(404).json({ error: `${err.message}` });
+    res.status(500).json({ error: err.message }).end();
   }
 });
 
