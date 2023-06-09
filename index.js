@@ -5,18 +5,18 @@ import { configDotenv } from 'dotenv';
 
 configDotenv();
 
+const errorHandler = (error, request, response, next) => {
+  if (error.name === 'CastError') {
+    return response.status(400).send({ error: 'malformatted id' });
+  }
+  next(error);
+};
+
 const isString = (str) => {
   if (typeof str !== 'string') {
     throw new Error(`typeof ${str} is not valid`);
   }
   return str;
-};
-
-const checkIfNameExists = async (name) => {
-  const existingContact = await Contact.findOne({ name });
-  if (existingContact) {
-    throw new Error('Name already exists in the database');
-  }
 };
 
 const parseName = (name) => {
@@ -70,7 +70,7 @@ app.get('/api/persons', (req, res) => {
     });
 });
 
-app.get('/api/persons/:id', (req, res) => {
+app.get('/api/persons/:id', (req, res, next) => {
   Contact.findById(req.params.id)
     .then((result) => {
       if (result) {
@@ -80,22 +80,23 @@ app.get('/api/persons/:id', (req, res) => {
       }
     })
     .catch((error) => {
-      res.status(400).send({ error: 'malformated id' });
+      next(error);
     });
 });
 
-app.delete('/api/persons/:id', (req, res) => {
+app.delete('/api/persons/:id', (req, res, next) => {
   Contact.findByIdAndDelete(req.params.id)
     .then((result) => {
       res.json(result);
     })
     .catch((error) => {
-      console.log(error);
-      res.status(404).send('contact is missing or not exist in the phonebook`');
+      next(error);
     });
 });
 
-app.post('/api/persons', (req, res) => {
+app.use(errorHandler);
+
+app.post('/api/persons', async (req, res) => {
   const body = req.body;
   if (!body) {
     return res.status(400).json({ error: 'content is missing' });
@@ -105,20 +106,18 @@ app.post('/api/persons', (req, res) => {
     const name = parseName(body.name);
     const number = parseNumber(body.number);
 
-    checkIfNameExists(name)
-      .then(() => {
-        const newContact = new Contact({
-          name,
-          number,
-        });
+    const existingContact = await Contact.findOne({ name });
+    if (existingContact) {
+      existingContact.number = number;
+    }
+    const newContact = new Contact({
+      name,
+      number,
+    });
 
-        newContact
-          .save()
-          .then((contact) => res.json(contact))
-          .catch((err) => {
-            res.status(404).json({ error: err.message }).end();
-          });
-      })
+    newContact
+      .save()
+      .then((contact) => res.json(contact))
       .catch((err) => {
         res.status(404).json({ error: err.message }).end();
       });
