@@ -10,7 +10,7 @@ configDotenv();
 const app = express();
 app.use(express.json());
 app.use(express.static('build'));
-morgan.token('body', (req, res) => JSON.stringify(req.body));
+morgan.token('body', (req, _res) => JSON.stringify(req.body));
 app.use(
   morgan(
     ':method :url :status :response-time ms - :res[content-length] :body - :req[content-length]'
@@ -25,7 +25,7 @@ app.get('/info', (_req, res) => {
   );
 });
 
-app.get('/api/persons', (req, res) => {
+app.get('/api/persons', (_req, res) => {
   Contact.find({})
     .then((result) => {
       if (result) {
@@ -63,9 +63,9 @@ app.delete('/api/persons/:id', (req, res, next) => {
     });
 });
 
-app.post('/api/persons', (req, res, next) => {
+app.post('/api/persons', (req, res) => {
   const body = req.body;
-  if (!body) {
+  if (typeof body !== 'object' || body === null) {
     return res.status(400).json({ error: 'content is missing' }).end();
   }
 
@@ -78,7 +78,9 @@ app.post('/api/persons', (req, res, next) => {
         if (existingContact) {
           return res
             .status(409)
-            .json({ error: 'Contact already exists in the database' })
+            .json({
+              error: 'Contact already exists in the database! Update instead',
+            })
             .end();
         } else {
           const newContact = new Contact({
@@ -90,15 +92,46 @@ app.post('/api/persons', (req, res, next) => {
             .save()
             .then((contact) => res.json(contact))
             .catch((error) => {
-              next(error);
+              res.status(500).json({ error: error.message }).end();
             });
         }
       })
       .catch((error) => {
-        next(error);
+        res.status(500).json({ error: error.message }).end();
       });
   } catch (error) {
-    next(error);
+    res.status(500).json({ error: error.message }).end();
+  }
+});
+
+app.put('/api/persons/:id', (req, res, next) => {
+  const body = req.body;
+  if (typeof body !== 'object' || body === null) {
+    return res.status(400).json({ error: 'content is missing' }).end();
+  }
+
+  try {
+    const name = parseName(body.name);
+    const number = parseNumber(body.number);
+
+    const updatedContact = { name, number };
+    console.log(updatedContact);
+
+    Contact.findByIdAndUpdate(req.params.id, updatedContact, {
+      new: true,
+    })
+      .then((result) => {
+        if (!result) {
+          return res.status(404).json({ error: 'Contact not found' });
+        }
+        res.status(200).json(result);
+      })
+      .catch((error) => {
+        console.log(error);
+        res.status(500).json({ error: 'Something went wrong' });
+      });
+  } catch (error) {
+    res.status(500).json({ error: error.message }).end();
   }
 });
 
