@@ -80,8 +80,7 @@ app.get('/api/persons/:id', (req, res) => {
       }
     })
     .catch((error) => {
-      console.log(error);
-      res.status(500).end();
+      res.status(400).send({ error: 'malformated id' });
     });
 });
 
@@ -115,7 +114,6 @@ app.post('/api/persons', (req, res) => {
 
         newContact
           .save()
-          .then((result) => result.toJSON())
           .then((contact) => res.json(contact))
           .catch((err) => {
             res.status(404).json({ error: err.message }).end();
