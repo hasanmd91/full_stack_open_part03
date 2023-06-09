@@ -12,20 +12,19 @@ const isString = (str) => {
   return str;
 };
 
-const checkUnique = async (name) => {
-  const result = await Contact.find({ name: name });
-  console.log(result);
-  if (result.length > 0) {
-    throw new Error(`Provided name '${name}' must be unique`);
-  }
-
-  return name;
-};
+// const checkUnique = async (name) => {
+//   const result = await Contact.findOne({ name: name });
+//   if (result) {
+//     throw new Error(`Provided name '${name}' must be unique`);
+//   }
+//   return name;
+// };
 
 const parseName = (name) => {
-  if (!name || !isString(name) || !checkUnique(name)) {
+  if (!name || !isString(name)) {
     throw new Error('name is missing');
   }
+
   return name;
 };
 
@@ -99,7 +98,7 @@ app.delete('/api/persons/:id', (req, res) => {
     });
 });
 
-app.post('/api/persons', async (req, res) => {
+app.post('/api/persons', (req, res) => {
   const body = req.body;
   if (!body) {
     return res.status(400).json({ error: 'content is missing' });
@@ -112,9 +111,8 @@ app.post('/api/persons', async (req, res) => {
 
     newContact
       .save()
-      .then((result) => {
-        res.json(result).end();
-      })
+      .then((result) => result.toJSON())
+      .then((contact) => res.json(contact))
       .catch((err) => {
         res.status(404).json({ error: err.message }).end();
       });
