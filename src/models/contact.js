@@ -17,7 +17,7 @@ mongoose
 
 const contactSchema = new mongoose.Schema({
   name: String,
-  number: String,
+  number: Number,
 });
 
 contactSchema.set('toJSON', {
