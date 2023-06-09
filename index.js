@@ -12,19 +12,17 @@ const isString = (str) => {
   return str;
 };
 
-// const checkUnique = async (name) => {
-//   const result = await Contact.findOne({ name: name });
-//   if (result) {
-//     throw new Error(`Provided name '${name}' must be unique`);
-//   }
-//   return name;
-// };
+const checkIfNameExists = async (name) => {
+  const existingContact = await Contact.findOne({ name });
+  if (existingContact) {
+    throw new Error('Name already exists in the database');
+  }
+};
 
 const parseName = (name) => {
   if (!name || !isString(name)) {
     throw new Error('name is missing');
   }
-
   return name;
 };
 
@@ -103,16 +101,26 @@ app.post('/api/persons', (req, res) => {
   if (!body) {
     return res.status(400).json({ error: 'content is missing' });
   }
-  try {
-    const newContact = new Contact({
-      name: parseName(body.name),
-      number: parseNumber(body.number),
-    });
 
-    newContact
-      .save()
-      .then((result) => result.toJSON())
-      .then((contact) => res.json(contact))
+  try {
+    const name = parseName(body.name);
+    const number = parseNumber(body.number);
+
+    checkIfNameExists(name)
+      .then(() => {
+        const newContact = new Contact({
+          name,
+          number,
+        });
+
+        newContact
+          .save()
+          .then((result) => result.toJSON())
+          .then((contact) => res.json(contact))
+          .catch((err) => {
+            res.status(404).json({ error: err.message }).end();
+          });
+      })
       .catch((err) => {
         res.status(404).json({ error: err.message }).end();
       });
