@@ -1,19 +1,19 @@
-import mongoose from 'mongoose';
-import { configDotenv } from 'dotenv';
+const mongoose = require('mongoose')
+const dotenv = require('dotenv')
 
-configDotenv();
+dotenv.config()
 
-mongoose.set('strictQuery', false);
-const Url = process.env.MONGODB_URI;
+mongoose.set('strictQuery', false)
+const Url = process.env.MONGODB_URI
 
 mongoose
   .connect(Url)
   .then(() => {
-    console.log('connected to mongodb');
+    console.log('connected to mongodb')
   })
   .catch((error) => {
-    console.log(`error connecting to mongodb: ${error.message}`);
-  });
+    console.log(`error connecting to mongodb: ${error.message}`)
+  })
 
 const contactSchema = new mongoose.Schema({
   name: {
@@ -25,23 +25,21 @@ const contactSchema = new mongoose.Schema({
     type: String,
     validate: {
       validator: function (v) {
-        return /\d{2,3}-\d{6,}/.test(v);
+        return /\d{2,3}-\d{6,}/.test(v)
       },
       message: (props) => `${props.value} is not a valid phone number`,
     },
 
     required: [true, 'user phone number is required'],
   },
-});
+})
 
 contactSchema.set('toJSON', {
   transform: (_document, returnedObject) => {
-    returnedObject.id = returnedObject._id.toString();
-    delete returnedObject._id;
-    delete returnedObject.__v;
+    returnedObject.id = returnedObject._id.toString()
+    delete returnedObject._id
+    delete returnedObject.__v
   },
-});
+})
 
-const Contact = mongoose.model('Contact', contactSchema);
-
-export default Contact;
+module.exports = mongoose.model('Contact', contactSchema)
