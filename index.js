@@ -21,6 +21,23 @@ app.use(
   )
 )
 
+
+app.get('/info', (req, res) => {
+  const currentDate = new Date().toLocaleString()
+  Contact.find({}).then(result => {
+    res.send(
+      `
+          <h1>
+              <p>Phonebook has info for ${result.length} people</p>
+          </h1>
+          <h1>
+              <p>${currentDate}</p>
+          </h1>`
+    )
+  })
+})
+
+
 app.get('/api/persons', (req, res) => {
   Contact.find({})
     .then((result) => {
